@@ -1,0 +1,3 @@
+[submodule "osTicket"]
+	path = osTicket
+	url = git@github.com:osTicket/osTicket.git
