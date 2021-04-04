@@ -1,6 +1,9 @@
 FROM php:7.4-apache
 
-# We need the LDAP extension
+# For debugging purposes, do not merge the different RUN steps
+
+# We need the LDAP extension; we don't need to keep libldap2-dev
+# Clean up apt-get after each layer to keep layers small
 RUN apt-get update && \
 	apt-get install -y libldap2-dev && \
 	rm -rf /var/lib/apt/lists/* && \
@@ -8,7 +11,7 @@ RUN apt-get update && \
 	docker-php-ext-install ldap && \
 	apt-get purge -y --auto-remove libldap2-dev
 	
-# Configure opcache. In production we may want to override PHP_OPCACHE_VALIDATE_TIMESTAMPS
+# Configure opcache. In development we may want to override PHP_OPCACHE_VALIDATE_TIMESTAMPS
 RUN docker-php-ext-install opcache
 ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS="0" \ 
     PHP_OPCACHE_MAX_ACCELERATED_FILES="10000" \
@@ -16,7 +19,54 @@ ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS="0" \
     PHP_OPCACHE_MAX_WASTED_PERCENTAGE="10"
 COPY ./opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+# MySQLi
+RUN docker-php-ext-install mysqli
 
-VOLUME ["/var/www/html"]
-EXPOSE 80	
+# gdlib
+RUN apt-get update && \
+	apt-get install -y libpng-dev && \
+	rm -rf /var/lib/apt/lists/* && \
+	docker-php-ext-install gd
+	
+# IMAP
+RUN apt-get update && \
+	apt-get install -y libc-client-dev libkrb5-dev && \
+	rm -rf /var/lib/apt/lists/* && \
+	docker-php-ext-configure imap --with-kerberos --with-imap-ssl && \
+	docker-php-ext-install imap
+	
+# intl
+RUN apt-get update && \
+	apt-get install -y libicu-dev && \
+	rm -rf /var/lib/apt/lists/* && \
+	docker-php-ext-configure intl && \
+	docker-php-ext-install intl
+	
+# apcu
+RUN pecl install apcu && \
+	docker-php-ext-enable apcu
+	
+# zip
+RUN apt-get update && \
+	apt-get install -y libzip-dev zip && \
+	rm -rf /var/lib/apt/lists/* && \
+	docker-php-ext-install zip
+	
+# Installing cron for cronjobs
+RUN apt-get update && \
+	apt-get install -y cron && \
+	rm -rf /var/lib/apt/lists/*
+COPY ./osticketcron /etc/cron.d/osticketcron
+
+# Import default osTicket installation
+COPY ./osTicket /var/www/html
+
+COPY ./php.ini "$PHP_INI_DIR/php.ini"
+
+# Run both apache2-frontend as well as the cron daemon
+ENTRYPOINT ["/bin/bash", "-c", "chmod 644 /etc/cron.d/osticketcron; cron & apache2-foreground"]
+
+# Make /var/www/html a recommended volume
+VOLUME ["/var/www/html", "/var/www/attachments"]
+EXPOSE 80
+
