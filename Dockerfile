@@ -64,9 +64,9 @@ COPY ./osTicket /var/www/html
 COPY ./php.ini "$PHP_INI_DIR/php.ini"
 
 # Run both apache2-frontend as well as the cron daemon
-ENTRYPOINT ["/bin/bash", "-c", "chmod 644 /etc/cron.d/osticketcron; cron & apache2-foreground"]
+ENTRYPOINT ["/bin/bash", "-c", "cp -rf /config /var/www/html/include; chmod 644 /etc/cron.d/osticketcron; cron & apache2-foreground"]
 
 # Make /var/www/html a recommended volume
-VOLUME ["/var/www/html/include/ost-config.php", "/var/www/attachments"]
+VOLUME ["/config", "/var/www/attachments"]
 EXPOSE 80
 
