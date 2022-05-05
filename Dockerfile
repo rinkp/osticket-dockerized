@@ -60,6 +60,7 @@ COPY ./osticketcron /etc/cron.d/osticketcron
 
 # Import default osTicket installation
 COPY ./osTicket /var/www/html
+RUN rm -rf /var/www/html/setup
 
 # Import plugins
 COPY ./plugins /var/www/html/include/plugins
