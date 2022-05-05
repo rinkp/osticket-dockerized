@@ -1,4 +1,4 @@
-FROM php:7.4-apache
+FROM php:8.1-apache
 
 # For debugging purposes, do not merge the different RUN steps
 
@@ -67,6 +67,6 @@ COPY ./php.ini "$PHP_INI_DIR/php.ini"
 ENTRYPOINT ["/bin/bash", "-c", "chmod 644 /etc/cron.d/osticketcron; cron & apache2-foreground"]
 
 # Make /var/www/html a recommended volume
-VOLUME ["/var/www/html", "/var/www/attachments"]
+VOLUME ["/var/www/html/include/ost-config.php", "/var/www/attachments"]
 EXPOSE 80
 

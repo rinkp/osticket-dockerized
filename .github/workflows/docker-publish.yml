@@ -1,4 +1,4 @@
-name: Docker
+name: Build (& Push) Docker Image
 
 on:
   push:
@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
 
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
