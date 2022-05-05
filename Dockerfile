@@ -61,10 +61,13 @@ COPY ./osticketcron /etc/cron.d/osticketcron
 # Import default osTicket installation
 COPY ./osTicket /var/www/html
 
+# Import plugins
+COPY ./plugins /var/www/html/include/plugins
+
 COPY ./php.ini "$PHP_INI_DIR/php.ini"
 
 # Run both apache2-frontend as well as the cron daemon
-ENTRYPOINT ["/bin/bash", "-c", "cp -rf /config /var/www/html/include; chmod 644 /etc/cron.d/osticketcron; cron & apache2-foreground"]
+ENTRYPOINT ["/bin/bash", "-c", "cp -rf /config/* /var/www/html/include; chmod 644 /etc/cron.d/osticketcron; cron & apache2-foreground"]
 
 # Make /var/www/html a recommended volume
 VOLUME ["/config", "/var/www/attachments"]
