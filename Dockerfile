@@ -1,4 +1,4 @@
-FROM php:8.1-apache
+FROM php:8.0-apache
 
 # For debugging purposes, do not merge the different RUN steps
 
