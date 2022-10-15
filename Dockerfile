@@ -90,6 +90,7 @@ COPY ./setup/. /var/www/html/setup/
 
 COPY ./php.ini "$PHP_INI_DIR/php.ini"
 COPY ./docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 HEALTHCHECK --timeout=2s --start-period=10s CMD curl --fail http://localhost || exit 1
 
