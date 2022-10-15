@@ -1,0 +1,87 @@
+version: '3.6'
+services:
+  osticket:
+    image: ghcr.io/rinkp/osticket-dockerized:main
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      - "OST_SECRET_SALT=" #<-- Fill in a random 256 bit key. Not provided in the example for safety
+      - "OST_ADMIN_EMAIL=osticket@example.org"
+      - "OST_ADMIN_PASSWD=osticket"
+      - "OST_DBTYPE=mysql"
+      - "OST_DBHOST=mariadb"
+      - "OST_DBNAME=osticket"
+      - "OST_DBUSER=osticket"
+      - "OST_DBPASS=osticket"
+      - "OST_TABLE_PREFIX=ost_"
+      - "OST_TRUSTED_PROXIES=127.0.0.1"
+      - "OST_LOCAL_NETWORKS=127.0.0.0/24"
+      - "OST_SESSION_BACKEND=db"
+      - "PHP_OPCACHE_MEMORY_CONSUMPTION=384"
+      - "PHP_OPCACHE_MAX_WASTED_PERCENTAGE=10"
+    restart: unless-stopped
+    volumes:
+      - attachments:/var/www/attachments:rw
+    networks:
+      osticket-network:
+        aliases:
+          - osticket
+    ports:
+      - 0.0.0.0:8080:80/tcp
+      
+  mariadb:
+    image: mariadb:latest
+    environment:
+      - "MARIADB_RANDOM_ROOT_PASSWORD=yes"
+      - "MARIADB_DATABASE=osticket"
+      - "MARIADB_USER=osticket"
+      - "MARIADB_PASSWORD=osticket"
+      - "MARIADB_MYSQL_LOCALHOST_USER=yes"
+    restart: unless-stopped
+    volumes:
+      - mysql:/var/lib/mysql:rw
+    healthcheck:
+      test: "/usr/local/bin/healthcheck.sh --su mysql --connect --innodb_initialized"
+      timeout: 10s
+      retries: 5
+    networks:
+      osticket-network:
+        aliases:
+          - mariadb
+    expose:
+      - 3306
+  
+  #postfix:
+  #  hostname: osticket-postfix
+  #  image: juanluisbaptiste/postfix
+  #  environment:
+  #    - SMTP_SERVER=
+  #    - SMTP_USERNAME=
+  #    - SMTP_PASSWORD=
+  #    - SMTP_PORT=587
+  #    - SERVER_HOSTNAME=osticket-postfix
+  #  restart: unless-stopped
+  #  healthcheck:
+  #    test: /bin/bash -c "if [ $$(mailq | wc -l) -ne 1 ]; then false; fi"
+  #    interval: 1m
+  #    timeout: 1s
+  #    retries: 3
+  #  stop_grace_period: 90s
+  #  networks:
+  #    osticket-network:
+  #      aliases:
+  #        - postfix
+  #  expose:
+  #    - "25"
+        
+networks:
+  osticket-network:
+    driver: bridge
+    enable_ipv6: false
+    ipam:
+      driver: default
+        
+volumes:
+  attachments:
+  mysql:

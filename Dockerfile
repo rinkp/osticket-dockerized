@@ -60,16 +60,21 @@ COPY ./osticketcron /etc/cron.d/osticketcron
 
 # Import default osTicket installation
 COPY ./osTicket /var/www/html
-RUN rm -rf /var/www/html/setup
 
 # Import plugins
 COPY ./plugins /var/www/html/include/plugins
 COPY ./config /config
 
+# Copy modified installation
+COPY ./setup/. /var/www/html/setup/
+
 COPY ./php.ini "$PHP_INI_DIR/php.ini"
+COPY ./docker-entrypoint.sh /docker-entrypoint.sh
+
+HEALTHCHECK --timeout=2s --start-period=10s CMD curl --fail http://localhost || exit 1
 
 # Run both apache2-frontend as well as the cron daemon
-ENTRYPOINT ["/bin/bash", "-c", "env >> /etc/environment; cp -rf /config/* /var/www/html/include; chmod 644 /etc/cron.d/osticketcron; cron & apache2-foreground"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 # Make /var/www/html a recommended volume
 VOLUME ["/var/www/attachments"]

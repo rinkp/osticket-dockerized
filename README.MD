@@ -1,12 +1,15 @@
 # osTicket-dockerized
-This is a Docker container containing [osTicket](https://github.com/osTicket/osTicket). 
+This is a Docker container containing [osTicket](https://github.com/osTicket/osTicket).
+
+An example `docker-compose.yml` file is provided as well.  
 
 Configuration happens through environment variables. These are listed below. Additionally, it is possible to store a `ost-config.php` file in `/config/ost-config.php` (e.g. file mount). 
 
 | Variable name | Default | Description |
 |---------------|---------|-------------|
 | `OST_SECRET_SALT` | *None, mandatory* | 32-character random string (generate [here](https://passwordsgenerator.net/?length=32&symbols=0&numbers=1&lowercase=1&uppercase=1&similar=1&ambiguous=0&client=1&autoselect=0))|
-| `OST_ADMIN_EMAIL` | *None, mandatory* | Email address used for database connection errors |
+| `OST_ADMIN_EMAIL` | *None, mandatory* | Email address used for database connection errors as well as the username for the first admin user |
+| `OST_ADMIN_PASSWD` | *None, mandatory* | The initial password for the admin user |
 | `OST_DBTYPE` | `mysql` | MySQL Database type |
 | `OST_DBHOST` | `127.0.0.1:3306` | MySQL Database host |
 | `OST_DBNAME` | `osticket` | MySQL Database name |
@@ -19,7 +22,7 @@ Configuration happens through environment variables. These are listed below. Add
 | `OST_LOCAL_NETWORKS` | `127.0.0.0/24` | Whitelist authentication for these IPs |
 | `OST_SESSION_BACKEND` <br/> `OST_MEMCACHE_SERVERS` | `db`<br/>` `| osTicket supports `memcache` as `SESSION_BACKEND` if the 'memcache' pecl extesion is installed. This also requires `MEMCACHE_SERVERS` to be configured as well.
 
-Additionally, the container is configured to use 'opcache' for performance gain. The settings for this can be modified using these environment variables.
+Additionally, the container is configured to use 'opcache' for performance improvements. The settings for this can be modified using these environment variables.
 
 | Variable name | Default | Description |
 |---------------|---------|-------------|
