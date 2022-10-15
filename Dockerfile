@@ -1,4 +1,24 @@
-FROM php:8.0-apache
+FROM php:8.0 as buildPlugins
+
+COPY ./osTicket-plugins /osTicket-plugins
+WORKDIR /osTicket-plugins
+
+RUN apt-get update && \
+	apt-get install -y libzip-dev zip && \
+	docker-php-ext-install zip
+
+RUN COMPOSER_ALLOW_SUPERUSER=1 php make.php hydrate
+
+RUN php -dphar.readonly=0 make.php build audit && \
+    php -dphar.readonly=0 make.php build auth-2fa && \
+    php -dphar.readonly=0 make.php build auth-ldap && \
+    php -dphar.readonly=0 make.php build auth-oauth2 && \
+    php -dphar.readonly=0 make.php build auth-passthru && \
+    php -dphar.readonly=0 make.php build auth-password-policy  && \
+    php -dphar.readonly=0 make.php build storage-fs  && \
+    php -dphar.readonly=0 make.php build  storage-s3
+
+FROM php:8.0-apache as run
 
 # For debugging purposes, do not merge the different RUN steps
 
@@ -62,7 +82,7 @@ COPY ./osticketcron /etc/cron.d/osticketcron
 COPY ./osTicket /var/www/html
 
 # Import plugins
-COPY ./plugins /var/www/html/include/plugins
+COPY --from=buildPlugins /osTicket-plugins/*.phar /var/www/html/include/plugins/
 COPY ./config /config
 
 # Copy modified installation

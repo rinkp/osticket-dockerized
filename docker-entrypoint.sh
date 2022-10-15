@@ -10,6 +10,7 @@ if [ -d "/var/www/html/setup/" ]; then
         cd ..
         rm -rf /var/www/html/setup
         chmod -w /var/www/html/include/ost-config.php
+        chown -R www-data:www-data /var/www/attachments/
     else
         exit 1
     fi
