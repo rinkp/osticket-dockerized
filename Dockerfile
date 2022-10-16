@@ -71,6 +71,9 @@ RUN apt-get update && \
 	apt-get install -y libzip-dev zip && \
 	rm -rf /var/lib/apt/lists/* && \
 	docker-php-ext-install zip
+    
+# mod_rewrite
+RUN a2enmod rewrite
 	
 # Installing cron for cronjobs
 RUN apt-get update && \
