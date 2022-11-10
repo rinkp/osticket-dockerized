@@ -36,8 +36,9 @@ define('SECRET_SALT', getenv("OST_SECRET_SALT") ?: die("Missing required environ
 define('ADMIN_EMAIL', getenv("OST_ADMIN_EMAIL") ?: die("Missing required environment variable: OST_ADMIN_EMAIL"));
 
 # Database Options
-# ---------------------------------------------------
+# ====================================================
 # Mysql Login info
+#
 define('DBTYPE', getenv("OST_DBTYPE") ?: 'mysql');
 define('DBHOST', getenv("OST_DBHOST") ?: '127.0.0.1:3306');
 define('DBNAME', getenv("OST_DBNAME") ?: 'osticket');
@@ -70,7 +71,7 @@ if (!empty(getenv("OST_DBSSLKEY"))) define('DBSSLCA', getenv("OST_DBSSLKEY"));
 
 #
 # Mail Options
-# ---------------------------------------------------
+# ===================================================
 # Option: MAIL_EOL (default: \n)
 #
 # Some mail setups do not handle emails with \r\n (CRLF) line endings for
@@ -92,7 +93,7 @@ define('MAIL_EOL', getenv("OST_MAIL_EOL") ?: "\n");
 
 #
 # HTTP Server Options
-# ---------------------------------------------------
+# ===================================================
 # Option: ROOT_PATH (default: <auto detect>, fallback: /)
 #
 # If you have a strange HTTP server configuration and osTicket cannot
@@ -140,21 +141,33 @@ define('TRUSTED_PROXIES', getenv("OST_TRUSTED_PROXIES") ?: '');
 define('LOCAL_NETWORKS', getenv("OST_LOCAL_NETWORKS") ?: '127.0.0.0/24');
 
 #
-# Session Storage Options
-# ---------------------------------------------------
-# Option: SESSION_BACKEND (default: db)
+# Session Options
+# ===================================================
 #
-# osTicket supports Memcache as a session storage backend if the `memcache`
-# pecl extesion is installed. This also requires MEMCACHE_SERVERS to be
-# configured as well.
+# Session Name (SESSID)
+# ---------------------------------------------------
+# Option: SESSION_SESSID (default: OSTSESID)
+#
+# osTicket Session Name (SESSID) - used to set session cookie
+define('SESSION_SESSID', getenv("OST_SESSION_SESSID") ?: 'OSTSESSID');
+
+# Session Storage Backends
+# ---------------------------------------------------
+
+# Option: SESSION_BACKEND (default: database)
+#
+# Values: 'database' (default)
+#         'memcache' (Use Memcache servers)
+#         'memcache.database' (Memcache Primary, Database Secondary)
+#         'system' (use PHP settings as configured (not recommended!))
+#
+# osTicket supports Database by default as well as Memcache as a session
+# storage backend if the `memcache` pecl extesion is installed. This also
+# requires MEMCACHE_SERVERS to be configured as well.
 #
 # MEMCACHE_SERVERS can be defined as a comma-separated list of host:port
 # specifications. If more than one server is listed, the session is written
 # to all of the servers for redundancy.
-#
-# Values: 'db' (default)
-#         'memcache' (Use Memcache servers)
-#         'system' (use PHP settings as configured (not recommended!))
 #
 if (!empty(getenv("OST_SESSION_BACKEND"))) define('SESSION_BACKEND', getenv("OST_SESSION_BACKEND"));
 if (!empty(getenv("OST_MEMCACHE_SERVERS"))) define('MEMCACHE_SERVERS', getenv("MEMCACHE_SERVERS"));

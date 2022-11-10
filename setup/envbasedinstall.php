@@ -14,7 +14,8 @@ require_once INC_DIR.'class.installer.php';
 require_once('../include/ost-config.php');
 
 // Create the installer based on the dummy config file
-$installer = new Installer('../include/ost-config.php');
+define('OSTICKET_CONFIGFILE','../include/ost-config.php');
+$installer = new Installer(OSTICKET_CONFIGFILE);
 
 $status = $installer->install(
     array(
