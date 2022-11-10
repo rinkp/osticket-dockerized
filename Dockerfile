@@ -7,7 +7,7 @@ RUN apt-get update && \
 	apt-get install -y libzip-dev zip && \
 	docker-php-ext-install zip
 
-RUN COMPOSER_ALLOW_SUPERUSER=1 php make.php hydrate
+RUN COMPOSER_ALLOW_SUPERUSER=1 php ./make.php hydrate
 
 RUN php -dphar.readonly=0 make.php build audit && \
     php -dphar.readonly=0 make.php build auth-2fa && \
@@ -27,7 +27,7 @@ FROM php:8.0-apache as run
 RUN apt-get update && \
 	apt-get install -y libldap2-dev && \
 	rm -rf /var/lib/apt/lists/* && \
-	docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ && \
+	docker-php-ext-configure ldap --with-libdir=lib/ && \
 	docker-php-ext-install ldap && \
 	apt-get purge -y --auto-remove libldap2-dev
 	

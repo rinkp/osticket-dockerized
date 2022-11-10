@@ -1,7 +1,9 @@
 # osTicket-dockerized
 This is a Docker container containing [osTicket](https://github.com/osTicket/osTicket).
 
-An example `docker-compose.yml` file is provided as well. This includes a local database instance, but you can also deploy the image with an external database server.<br/>
+Available for linux/amd64 and linux/arm64 as `rinkp/osticket-dockerized` and `ghcr.io/rinkp/osticket-dockerized`
+
+An example [docker-compose.yml](https://raw.githubusercontent.com/rinkp/osticket-dockerized/main/docker-compose.yml) file is provided as well. This includes a local database instance, but you can also deploy the image with an external database server.<br/>
 When using the local database instance, note that the first start will take an extra 30 seconds since MariaDB has to start.
 
 Configuration happens through environment variables. These are listed below. Additionally, it is possible to store a `ost-config.php` file in `/config/ost-config.php` (e.g. file mount). 
