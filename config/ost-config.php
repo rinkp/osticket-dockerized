@@ -66,8 +66,8 @@ define('TABLE_PREFIX', getenv("OST_TABLE_PREFIX") ?: 'ost_');
 # More information (to-be) available in doc/security/hardening.md
 
 if (!empty(getenv("OST_DBSSLCA"))) define('DBSSLCA', getenv("OST_DBSSLCA"));
-if (!empty(getenv("OST_DBSSLCERT"))) define('DBSSLCA', getenv("OST_DBSSLCERT"));
-if (!empty(getenv("OST_DBSSLKEY"))) define('DBSSLCA', getenv("OST_DBSSLKEY"));
+if (!empty(getenv("OST_DBSSLCERT"))) define('DBSSLCERT', getenv("OST_DBSSLCERT"));
+if (!empty(getenv("OST_DBSSLKEY"))) define('DBSSLKEY', getenv("OST_DBSSLKEY"));
 
 #
 # Mail Options
