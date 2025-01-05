@@ -9,7 +9,7 @@ if [ -d "/var/www/html/setup/" ]; then
     if [ $? -eq 0 ]; then
         cd ..
         rm -rf /var/www/html/setup
-        chmod -w /var/www/html/include/ost-config.php
+        chmod 0644 /var/www/html/include/ost-config.php
         chown -R www-data:www-data /var/www/attachments/
     else
         exit 1

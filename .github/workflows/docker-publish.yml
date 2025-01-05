@@ -11,15 +11,30 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    name: Build ${{ github.event_name != 'pull_request' && ' and publish' || '' }} ${{ github.ref_name }}${{ matrix.patches }}
+    strategy:
+      matrix:
+        patches: ["", "-patches"]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
+          fetch-depth: 0
+
+      - name: Switch osTicket branch to ${{ github.ref_name == 'main' && 'develop' || github.ref_name}}${{ matrix.patches }}
+        env:
+          BRANCH: ${{ github.ref_name == 'main' && 'develop' || github.ref_name}}${{ matrix.patches }}
+        run: |
+          cd osTicket/
+          git remote
+          git fetch origin $BRANCH
+          git switch --detach origin/$BRANCH
+          cd ..
         
       - name: Get Docker meta (for tags)
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           # list of Docker images to use as base name for tags
           images: |
@@ -27,10 +42,9 @@ jobs:
             ghcr.io/${{ github.repository }}
           # generate Docker tags based on the following events/attributes
           tags: |
-            type=schedule
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
+            type=ref,event=branch,suffix=${{ matrix.patches }}
+            type=ref,event=pr,suffix=${{ matrix.patches }}
+            type=semver,pattern={{version}}${{ matrix.patches }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2

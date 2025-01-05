@@ -1,4 +1,4 @@
-FROM php:8.1 as buildPlugins
+FROM php:8.2 AS build-plugins
 
 COPY ./osTicket-plugins /osTicket-plugins
 WORKDIR /osTicket-plugins
@@ -20,7 +20,7 @@ RUN php -dphar.readonly=0 make.php build audit && \
 
 
 # Build osTicket for release
-FROM php:8.1 as buildOsTicket
+FROM php:8.2 AS build-osticket
 
 # Import osTicket git
 COPY ./ /build
@@ -33,7 +33,7 @@ RUN php manage.php deploy -v -s -g deployment
 
 
 # Create osTicket container
-FROM php:8.1-apache as run
+FROM php:8.2-apache AS run
 # We need the LDAP extension; we don't need to keep libldap2-dev
 # Clean up apt-get after each layer to keep layers small
 RUN apt-get update && \
@@ -94,11 +94,12 @@ RUN apt-get update && \
 COPY ./osticketcron /etc/cron.d/osticketcron
 
 # Import default osTicket installation
-COPY --from=buildOsTicket /build/osTicket/deployment/ /var/www/html/
+COPY --from=build-osticket /build/osTicket/deployment/ /var/www/html/
 
 # Import plugins
-COPY --from=buildPlugins /osTicket-plugins/*.phar /var/www/html/include/plugins/
+COPY --from=build-plugins /osTicket-plugins/*.phar /var/www/html/include/plugins/
 COPY ./config /config
+RUN chmod 644 /config/ost-config.php
 
 # Copy modified installation
 COPY ./setup/. /var/www/html/setup/

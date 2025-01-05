@@ -1,12 +1,13 @@
-version: '3.6'
 services:
   osticket:
     image: rinkp/osticket-dockerized:main
+    build:
+      context: .
     depends_on:
       mariadb:
         condition: service_healthy
     environment:
-      - "OST_SECRET_SALT=" #<-- Fill in a random 256 bit key. Not provided in the example for safety
+      - "OST_SECRET_SALT=2fbc01f7288908ee92f66d775a72786e7b8b54eda051e88df4edb4814e4cc398" #<-- Fill in a random 256 bit key. Not provided in the example for safety
       - "OST_ADMIN_EMAIL=osticket@example.org"
       - "OST_ADMIN_PASSWD=osticket"
       - "OST_DBTYPE=mysql"
@@ -31,7 +32,7 @@ services:
       - 0.0.0.0:8080:80/tcp
       
   mariadb:
-    image: mariadb:latest
+    image: mariadb:lts
     environment:
       - "MARIADB_RANDOM_ROOT_PASSWORD=yes"
       - "MARIADB_DATABASE=osticket"

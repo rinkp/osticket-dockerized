@@ -38,3 +38,13 @@ Additionally, the container is configured to use 'opcache' for performance impro
 ## Using this repo
 
 This repository contains 2 submodules, pull them using `git submodule update --init --recursive`
+
+## Noteworthy changes
+Tags containing `-patches` are built from a fork of osTicket: https://github.com/rinkp/osticket-dockerized. Updates are rebased from the original to allow for easy comparisons. See the changes for 1.18.1 [here](https://github.com/osTicket/osTicket/compare/1.18.x...rinkp:osTicket:1.18.1-patches)
+
+- Changes applied in the past:
+  - Fix: Allowing multiple plugins with their own configuration (https://github.com/rinkp/osTicket/commit/3db0397135f799d33882596972e980cb46c90ac8), patched upstream in https://github.com/osTicket/osTicket/commit/3e96e5fdd649fcacc3a6cc2b177af47724fcd298
+  - Fix: Session data (https://github.com/rinkp/osTicket/commit/cf8b8ce721223281bc98db54dc2271f6cfb6d6cd), included upstream in https://github.com/osTicket/osTicket/pull/6360
+  - Fix: Strict attachment checking is too strict (https://github.com/rinkp/osTicket/commit/a3e1825a5b748aebcc41e485d1292e5e72c18b13 and https://github.com/rinkp/osTicket/commit/eda5af40fcfd2bbaff110bfebd95b0a800bc63f6), fixed upstream in https://github.com/osTicket/osTicket/commit/b5b9e2b4a6cce480853b673ca700316d9e063efc
+- Current changes:
+  - Allow certain forms to be visible when anonymous ticket creation is disabled (https://github.com/rinkp/osTicket/commit/2deed64e40a5a7738f0794ece9def6fa1c0fb20d)
