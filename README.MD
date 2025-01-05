@@ -34,3 +34,7 @@ Additionally, the container is configured to use 'opcache' for performance impro
 | `PHP_OPCACHE_MAX_ACCELERATED_FILES` | `16229` | The maximum number of files in the cache |
 | `PHP_OPCACHE_MEMORY_CONSUMPTION` | `384` | The amount of memory (in MB) that can be used by 'opcache' |
 | `PHP_OPCACHE_MAX_WASTED_PERCENTAGE` | `10` | The maximum percentage of wasted memory before 'opcache' is cleared |
+
+## Using this repo
+
+This repository contains 2 submodules, pull them using `git submodule update --init --recursive`

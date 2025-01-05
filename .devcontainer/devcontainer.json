@@ -1,0 +1,33 @@
+{
+	"customizations": {
+		"codespaces": {
+			"repositories": {
+				"osTicket/osTicket": {
+					"permissions": {
+						"metadata": "read",
+						"contents": "read"
+					}
+				},
+				"osTicket/osTicket-plugins": {
+					"permissions": {
+						"metadata": "read",
+						"contents": "read"
+					}
+				},
+				"rinkp/osTicket": {
+					"permissions": {
+						"metadata": "read",
+						"contents": "write"
+					}
+				}
+			}
+		},
+		"vscode": {
+      		"extensions": [
+				"ms-azuretools.vscode-docker",
+				"ms-vscode-remote.remote-containers"
+			]
+		}
+	},
+	"postCreateCommand": "git config --global url.\"https://github.com/\".insteadOf git@github.com: && git config --global url.\"https://\".insteadOf git:// && git submodule update --init --recursive"
+}
