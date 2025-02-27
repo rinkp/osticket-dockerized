@@ -65,9 +65,28 @@ define('TABLE_PREFIX', getenv("OST_TABLE_PREFIX") ?: 'ost_');
 #
 # More information (to-be) available in doc/security/hardening.md
 
-if (!empty(getenv("OST_DBSSLCA"))) define('DBSSLCA', getenv("OST_DBSSLCA"));
-if (!empty(getenv("OST_DBSSLCERT"))) define('DBSSLCERT', getenv("OST_DBSSLCERT"));
-if (!empty(getenv("OST_DBSSLKEY"))) define('DBSSLKEY', getenv("OST_DBSSLKEY"));
+$dbSslOptions = [
+    'OST_DBSSLCA' => 'DBSSLCA',
+    'OST_DBSSLCERT' => 'DBSSLCERT',
+    'OST_DBSSLKEY' => 'DBSSLKEY'
+];
+
+foreach ($dbSslOptions as $env => $const) {
+    $value = getenv($env);
+
+    // Check for `null`-like values and set to `null` explicitly.
+    if (
+        false === $value
+        || '' === $value
+        || 'null' === $value
+    ) {
+        $value = null;
+    }
+
+    // While the `db_connect` function checks whether `DBSSLCA` is defined,
+    // it is better to define all constants (even when they are `null`).
+    define($const, $value);
+}
 
 #
 # Mail Options
