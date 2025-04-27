@@ -1,11 +1,12 @@
-FROM php:8.2 AS build-plugins
+FROM php:8.4 AS build-plugins
 
-COPY ./osTicket-plugins /osTicket-plugins
 WORKDIR /osTicket-plugins
 
 RUN apt-get update && \
 	apt-get install -y libzip-dev zip && \
 	docker-php-ext-install zip
+
+COPY ./osTicket-plugins /osTicket-plugins
 
 RUN COMPOSER_ALLOW_SUPERUSER=1 php ./make.php hydrate
 
@@ -16,24 +17,24 @@ RUN php -dphar.readonly=0 make.php build audit && \
     php -dphar.readonly=0 make.php build auth-passthru && \
     php -dphar.readonly=0 make.php build auth-password-policy  && \
     php -dphar.readonly=0 make.php build storage-fs  && \
-    php -dphar.readonly=0 make.php build  storage-s3
+    php -dphar.readonly=0 make.php build storage-s3
 
 
 # Build osTicket for release
-FROM php:8.2 AS build-osticket
+FROM php:8.4 AS build-osticket
+
+RUN apt-get update && \
+	apt-get install -y git
 
 # Import osTicket git
 COPY ./ /build
 WORKDIR /build/osTicket
 
-RUN apt-get update && \
-	apt-get install -y git
-
 RUN php manage.php deploy -v -s -g deployment
 
 
 # Create osTicket container
-FROM php:8.2-apache AS run
+FROM php:8.4-apache AS run
 # We need the LDAP extension; we don't need to keep libldap2-dev
 # Clean up apt-get after each layer to keep layers small
 RUN apt-get update && \
@@ -56,23 +57,26 @@ RUN docker-php-ext-install mysqli
 
 # gdlib
 RUN apt-get update && \
-	apt-get install -y libpng-dev && \
+	apt-get install -y libpng-dev libpng16-16 && \
 	rm -rf /var/lib/apt/lists/* && \
-	docker-php-ext-install gd
+	docker-php-ext-install gd && \
+	apt-get purge -y --auto-remove libpng-dev
 	
 # IMAP
 RUN apt-get update && \
-	apt-get install -y libc-client-dev libkrb5-dev && \
+	apt-get install -y libc-client-dev libkrb5-dev libkrb5-3 && \
 	rm -rf /var/lib/apt/lists/* && \
-	docker-php-ext-configure imap --with-kerberos --with-imap-ssl && \
-	docker-php-ext-install imap
+	pecl install imap && \
+	docker-php-ext-enable imap && \
+	apt-get purge -y --auto-remove libc-client-dev libkrb5-dev
 	
 # intl
 RUN apt-get update && \
-	apt-get install -y libicu-dev && \
+	apt-get install -y libicu-dev libicu72 && \
 	rm -rf /var/lib/apt/lists/* && \
 	docker-php-ext-configure intl && \
-	docker-php-ext-install intl
+	docker-php-ext-install intl && \
+	apt-get purge -y --auto-remove libicu-dev
 	
 # apcu
 RUN pecl install apcu && \
@@ -80,9 +84,10 @@ RUN pecl install apcu && \
 	
 # zip
 RUN apt-get update && \
-	apt-get install -y libzip-dev zip && \
+	apt-get install -y libzip-dev libzip4 && \
 	rm -rf /var/lib/apt/lists/* && \
-	docker-php-ext-install zip
+	docker-php-ext-install zip && \
+	apt-get purge -y --auto-remove libzip-dev
     
 # mod_rewrite
 RUN a2enmod rewrite

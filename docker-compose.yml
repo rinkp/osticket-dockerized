@@ -7,7 +7,7 @@ services:
       mariadb:
         condition: service_healthy
     environment:
-      - "OST_SECRET_SALT=2fbc01f7288908ee92f66d775a72786e7b8b54eda051e88df4edb4814e4cc398" #<-- Fill in a random 256 bit key. Not provided in the example for safety
+      - "OST_SECRET_SALT=" #<-- Fill in a random 256 bit key. Not provided in the example for safety
       - "OST_ADMIN_EMAIL=osticket@example.org"
       - "OST_ADMIN_PASSWD=osticket"
       - "OST_DBTYPE=mysql"

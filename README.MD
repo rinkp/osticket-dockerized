@@ -40,7 +40,7 @@ Additionally, the container is configured to use 'opcache' for performance impro
 This repository contains 2 submodules, pull them using `git submodule update --init --recursive`
 
 ## Noteworthy changes
-Tags containing `-patches` are built from a fork of osTicket: https://github.com/rinkp/osticket-dockerized. Updates are rebased from the original to allow for easy comparisons. See the changes for 1.18.1 [here](https://github.com/osTicket/osTicket/compare/1.18.x...rinkp:osTicket:1.18.1-patches)
+Tags containing `-patches` are built from a fork of osTicket: https://github.com/rinkp/osticket-dockerized. Updates are rebased from the original to allow for easy comparisons. See the changes for 1.18.1 [here](https://github.com/osTicket/osTicket/compare/1.18.x...rinkp:osTicket:v1.18.1-patches)
 
 - Changes applied in the past:
   - Fix: Allowing multiple plugins with their own configuration (https://github.com/rinkp/osTicket/commit/3db0397135f799d33882596972e980cb46c90ac8), patched upstream in https://github.com/osTicket/osTicket/commit/3e96e5fdd649fcacc3a6cc2b177af47724fcd298
