@@ -22,14 +22,14 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      - name: Switch osTicket branch to ${{ github.ref_name == 'main' && 'develop' || github.ref_name}}${{ matrix.patches }}
+      - name: Switch osTicket branch to ${{ github.ref_name == 'main' && 'origin/develop' || github.ref_name}}${{ matrix.patches }}
         env:
-          BRANCH: ${{ github.ref_name == 'main' && 'develop' || github.ref_name}}${{ matrix.patches }}
+          BRANCH: ${{ github.ref_name == 'main' && 'origin/develop' || github.ref_name}}${{ matrix.patches }}
         run: |
           cd osTicket/
           git remote
-          git fetch origin $BRANCH
-          git switch --detach origin/$BRANCH
+          git fetch origin -t
+          git switch --detach $BRANCH
           cd ..
         
       - name: Get Docker meta (for tags)
