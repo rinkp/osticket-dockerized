@@ -2,19 +2,27 @@ name: Build (& Push) Docker Image
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, "experimental" ]
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
   pull_request:
-    branches: [ main ]
+    branches: [ main]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    name: Build ${{ github.event_name != 'pull_request' && ' and publish' || '' }} ${{ github.ref_name }}${{ matrix.patches }}
+    runs-on: ${{ matrix.platform == 'linux/arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    name: Build${{ github.event_name != 'pull_request' && '/push' || '' }} ${{ github.ref_name }}${{ matrix.patches }} for ${{ matrix.platform }}
     strategy:
+      max-parallel: 2
+      fail-fast: true
       matrix:
-        patches: ["", "-patches"]
+        patches: ["", "-patches"] #we branch first on patches so we can run one amd and one arm both times (useful for caching)
+        platform: ["linux/amd64", "linux/arm64"]
+    outputs:
+      digest_amd: ${{ steps.store_digest.outputs.digest_linux-amd64 }}
+      digest_amd_patches: ${{ steps.store_digest.outputs.digest_linux-amd64-patches }}
+      digest_arm: ${{ steps.store_digest.outputs.digest_linux-arm64 }}
+      digest_arm_patches: ${{ steps.store_digest.outputs.digest_linux-arm64-patches }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,9 +30,9 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      - name: Switch osTicket branch to ${{ github.ref_name == 'main' && 'origin/develop' || github.ref_name}}${{ matrix.patches }}
+      - name: Switch osTicket branch to ${{ github.ref_type == 'branch' && 'origin/develop' || github.ref_name}}${{ matrix.patches }}
         env:
-          BRANCH: ${{ github.ref_name == 'main' && 'origin/develop' || github.ref_name}}${{ matrix.patches }}
+          BRANCH: ${{ github.ref_type == 'branch' && 'origin/develop' || github.ref_name}}${{ matrix.patches }}
         run: |
           cd osTicket/
           git remote
@@ -40,14 +48,6 @@ jobs:
           images: |
             ${{ github.repository }}
             ghcr.io/${{ github.repository }}
-          # generate Docker tags based on the following events/attributes
-          tags: |
-            type=ref,event=branch,suffix=${{ matrix.patches }}
-            type=ref,event=pr,suffix=${{ matrix.patches }}
-            type=semver,pattern={{version}}${{ matrix.patches }}
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -56,7 +56,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
@@ -69,12 +69,71 @@ jobs:
       
       # Build and push Docker image with Buildx (don't push on PR)
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v3
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          platforms: ${{ matrix.platform }}
+          tags: |
+            ${{ github.repository }}
+            ghcr.io/${{ github.repository }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          outputs: push-by-digest=true,name-canonical=true,type=image,push=${{ github.event_name != 'pull_request' }}
+          cache-from: type=gha,scope=buildkit-${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=buildkit-${{ matrix.platform }}
+
+      - name: Store digest in output
+        id: store_digest
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          platform="${{ matrix.platform }}${{ matrix.patches }}"
+          digest="${{ steps.build.outputs.digest }}"
+          echo "digest_${platform//\//-}=${digest#sha256:}" >> "$GITHUB_OUTPUT"
+  
+  publish:
+    runs-on: ubuntu-24.04
+    name: Publish ${{ github.ref_name }}${{ matrix.patches }}${{ matrix.registry == 'ghcr.io/' && ' on ghcr.io' || ''}}
+    if: github.event_name != 'pull_request'
+    needs: build
+    strategy:
+      matrix:
+        patches: ["", "-patches"]
+        registry: ["", "ghcr.io/"]
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        if: ${{ matrix.registry == '' }}
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        if: ${{ matrix.registry == 'ghcr.io/' }}
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Get Docker meta (for tags)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            ${{ matrix.registry }}${{ github.repository }}
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=ref,event=branch,suffix=${{ matrix.patches }}
+            type=ref,event=pr,suffix=${{ matrix.patches }}
+            type=semver,pattern={{version}}${{ matrix.patches }}
+
+      - name: Create manifest list and push
+        run: |
+          digests="${{ matrix.registry }}${{ github.repository }}@sha256:${{ needs.build.outputs.digest_amd }} sha256:${{ needs.build.outputs.digest_arm }}"
+          digests_patches="${{ matrix.registry }}${{ github.repository }}@sha256:${{ needs.build.outputs.digest_amd_patches }} sha256:${{ needs.build.outputs.digest_arm_patches }}"
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $digests${{ matrix.patches == '-patches' && '_patches' || '' }}

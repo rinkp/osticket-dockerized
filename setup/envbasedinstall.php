@@ -41,6 +41,7 @@ if ($status) {
     $staff->forcePasswdRest();
     $staff->save();
     echo "Succesfully run installation. You can now sign in with username " . ADMIN_EMAIL . " and password " . getenv("OST_ADMIN_PASSWD");
+    touch("../setup/success");
 } elseif (!empty($status->prefix)) { // If we previously ran the installation, we can silently exit
     var_dump($installer->errors);
     exit(1);

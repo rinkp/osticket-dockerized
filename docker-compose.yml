@@ -21,7 +21,7 @@ services:
       - "OST_SESSION_BACKEND=db"
       - "PHP_OPCACHE_MEMORY_CONSUMPTION=384"
       - "PHP_OPCACHE_MAX_WASTED_PERCENTAGE=10"
-    restart: unless-stopped
+    restart: on-failure:2
     volumes:
       - attachments:/var/www/attachments:rw
     networks:
