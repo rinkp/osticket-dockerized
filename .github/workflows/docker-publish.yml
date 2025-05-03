@@ -73,6 +73,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
+          file: ./Dockerfile-alpine
           platforms: ${{ matrix.platform }}
           tags: |
             ${{ github.repository }}

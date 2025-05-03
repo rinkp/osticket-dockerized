@@ -107,6 +107,10 @@ COPY ./php.ini "$PHP_INI_DIR/php.ini"
 COPY ./docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
+# Enable new scripts to run in the older environment
+RUN mkdir /var/www/localhost && \
+	ln -s /var/www/html /var/www/localhost/htdocs
+
 HEALTHCHECK --timeout=2s --start-period=10s CMD curl --fail http://localhost || exit 1
 
 # Run both apache2-frontend as well as the cron daemon

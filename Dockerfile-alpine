@@ -1,0 +1,113 @@
+ARG PHP_VERSION=php84
+
+FROM php:8.4-alpine AS build-plugins
+ARG PHP_VERSION
+
+WORKDIR /osTicket-plugins
+
+RUN --mount=type=cache,target=/etc/apk/cache,sharing=locked \
+	apk add --update \
+	${PHP_VERSION}-curl \
+	${PHP_VERSION}-pecl-psr
+
+RUN --mount=type=bind,src=./osTicket-plugins,dst=/osTicket-plugins,readonly=false \
+	COMPOSER_ALLOW_SUPERUSER=1 php ./make.php hydrate \
+	php -dphar.readonly=0 make.php build audit && \
+    php -dphar.readonly=0 make.php build auth-2fa && \
+    php -dphar.readonly=0 make.php build auth-ldap && \
+    php -dphar.readonly=0 make.php build auth-oauth2 && \
+    php -dphar.readonly=0 make.php build auth-passthru && \
+    php -dphar.readonly=0 make.php build auth-password-policy  && \
+    php -dphar.readonly=0 make.php build storage-fs  && \
+    php -dphar.readonly=0 make.php build storage-s3 && \
+	mkdir /output && \
+	for f in $(ls *.phar); do cp $f /output; done
+
+# Build osTicket for release
+FROM php:8.4-alpine AS build-osticket
+
+RUN --mount=type=cache,target=/etc/apk/cache,sharing=locked \
+	apk add --update git
+
+# Import osTicket git
+WORKDIR /build/osTicket
+
+RUN --mount=type=bind,src=./osTicket,dst=/build/osTicket \
+	--mount=type=bind,src=./.git/modules/osTicket,dst=/build/.git/modules/osTicket,readonly=false \
+	php manage.php deploy -v -s -g /build/deployment
+
+# Create osTicket container
+FROM alpine:latest AS run
+ARG PHP_VERSION
+
+# We need PHP with several extensions
+RUN --mount=type=cache,target=/etc/apk/cache,sharing=locked \
+	apk add --update \
+	${PHP_VERSION}-apache2 \
+	${PHP_VERSION}-ctype \
+	${PHP_VERSION}-dom \
+	${PHP_VERSION}-gd \
+	${PHP_VERSION}-iconv \
+	${PHP_VERSION}-intl \
+	${PHP_VERSION}-fileinfo \
+	${PHP_VERSION}-xml \
+	${PHP_VERSION}-ldap \
+	${PHP_VERSION}-mbstring \
+	${PHP_VERSION}-phar \
+	${PHP_VERSION}-mysqli \
+	${PHP_VERSION}-opcache \
+	${PHP_VERSION}-session \
+	${PHP_VERSION}-zip \
+	${PHP_VERSION}-pecl-apcu \
+	${PHP_VERSION}-pecl-imap \
+	${PHP_VERSION}-cli
+
+RUN ln -s ${PHP_VERSION} /usr/bin/php
+
+# Configure opcache. In development we may want to override PHP_OPCACHE_VALIDATE_TIMESTAMPS
+ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS="0" \ 
+    PHP_OPCACHE_MAX_ACCELERATED_FILES="16229" \
+    PHP_OPCACHE_MEMORY_CONSUMPTION="256" \
+    PHP_OPCACHE_MAX_WASTED_PERCENTAGE="10"
+
+ENV OST_HELPDESK_URL= \
+	OST_HELPDESK_ONLINE=
+
+ENV OST_PLUGINS_STORAGEFS_PLUGIN=plugins/storage-fs.phar \
+	OST_PLUGINS_STORAGEFS_PATH=/var/www/attachments
+	
+# Installing cron for cronjobs
+RUN --mount=type=cache,target=/etc/apk/cache,sharing=locked \
+	apk add --update cronie
+COPY ./osticketcron /etc/cron.d/osticketcron
+
+# Import default osTicket installation
+RUN rm /var/www/localhost/htdocs/index.html
+COPY --from=build-osticket /build/deployment/ /var/www/localhost/htdocs/
+
+# Import plugins
+COPY --from=build-plugins /output/*.phar /var/www/localhost/htdocs/include/plugins/
+COPY ./config /config
+RUN chmod 644 /config/ost-config.php
+
+# Copy modified installation
+COPY ./setup/. /var/www/localhost/htdocs/setup/
+
+# Apache configuration modifications
+COPY ./apache-conf /etc/apache2/conf.d/
+# PHP configuration modifications
+COPY ./php-conf /etc/${PHP_VERSION}
+
+# Entrypoint
+COPY ./docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+HEALTHCHECK --timeout=2s --start-period=10s CMD curl --fail http://localhost || exit 1
+
+# Run both apache2-frontend as well as the cron daemon
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+# Make /var/www/attachments a volume
+VOLUME ${OST_PLUGINS_STORAGEFS_PATH}
+EXPOSE 80
+

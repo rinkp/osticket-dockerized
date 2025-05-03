@@ -1,2 +1,6 @@
 .devcontainer
 .github
+
+# Only include the default mpdf font to reduce image size
+osTicket/include/mpdf/vendor/mpdf/mpdf/ttfonts/
+!osTicket/include/mpdf/vendor/mpdf/mpdf/ttfonts/DejaVu*

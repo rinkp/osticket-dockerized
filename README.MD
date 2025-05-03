@@ -12,6 +12,8 @@ Configuration happens through environment variables. These are listed below. Add
 |---------------|---------|-------------|
 | `OST_SECRET_SALT` | *None, mandatory* | 32-character random string (generate [here](https://passwordsgenerator.net/?length=32&symbols=0&numbers=1&lowercase=1&uppercase=1&similar=1&ambiguous=0&client=1&autoselect=0))|
 | `OST_ADMIN_EMAIL` | *None, mandatory* | Email address used for database connection errors as well as the username for the first admin user |
+| `OST_HELPDESK_URL` | *None, optional* | URL of this osticket instance, used as 'helpdesk URL' |
+| `OST_HELPDESK_ONLINE` | *None, optional* | Boolean to indicate whether the helpdesk is accessible to non-admins |
 | `OST_ADMIN_PASSWD` | *None, mandatory* | The initial password for the admin user |
 | `OST_DBTYPE` | `mysql` | MySQL Database type |
 | `OST_DBHOST` | `127.0.0.1:3306` | MySQL Database host |
@@ -22,6 +24,8 @@ Configuration happens through environment variables. These are listed below. Add
 | `OST_DBSSLCA` <br/>`OST_DBSSLCERT`<br/>`OST_DBSSLKEY`| *None, optional* | MySQL SSL settings (in case MySQL server requires certificate connections). Paths to files (e.g. in a mount on `/config`).
 | `OST_MAIL_EOL` | `\n` | Change line ending in case your email server requires other line endings |
 | `OST_TRUSTED_PROXIES` | ` ` | To detect IPs and protocols correctly in case osTicket is behind a reverse proxy (useful for lockouts and forcing HTTPS) |
+| `OST_PLUGINS_STORAGEFS_PLUGIN` | `plugins/storage-fs.phar` | Path to the filesystem storage plugin (set to blank to disable) |
+| `OST_PLUGINS_STORAGEFS_PATH` | `/var/www/attachments` | Path where filesystem attachments are stored |
 | `OST_LOCAL_NETWORKS` | `127.0.0.0/24` | Whitelist authentication for these IPs |
 | `OST_SESSION_SESSID` | `OSTSESSID` | Session name for session cookie |
 | `OST_SESSION_BACKEND` <br/> `OST_MEMCACHE_SERVERS` | `db`<br/>` `| osTicket supports `memcache` as `SESSION_BACKEND` if the 'memcache' pecl extesion is installed. This also requires `MEMCACHE_SERVERS` to be configured as well.

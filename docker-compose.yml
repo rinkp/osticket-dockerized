@@ -3,6 +3,7 @@ services:
     image: rinkp/osticket-dockerized:main
     build:
       context: .
+      dockerfile: Dockerfile-alpine
     depends_on:
       mariadb:
         condition: service_healthy
@@ -21,6 +22,7 @@ services:
       - "OST_SESSION_BACKEND=db"
       - "PHP_OPCACHE_MEMORY_CONSUMPTION=384"
       - "PHP_OPCACHE_MAX_WASTED_PERCENTAGE=10"
+      - "OST_PLUGINS_STORAGEFS_PATH=/var/www/attachments"
     restart: on-failure:2
     volumes:
       - attachments:/var/www/attachments:rw

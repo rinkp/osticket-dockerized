@@ -1,2 +1,2 @@
 # Running the osTicket cronjob every minute
-* * * * * root /usr/local/bin/php /var/www/html/api/cron.php > /proc/1/fd/1 2>/proc/1/fd/2
+* * * * * root export $(grep -v '^#' /etc/environment | xargs); php /var/www/localhost/htdocs/api/cron.php > /proc/1/fd/1 2>/proc/1/fd/2
