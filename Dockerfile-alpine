@@ -32,8 +32,9 @@ RUN --mount=type=cache,target=/etc/apk/cache,sharing=locked \
 # Import osTicket git
 WORKDIR /build/osTicket
 
-RUN --mount=type=bind,src=./osTicket,dst=/build/osTicket \
+RUN --mount=type=bind,src=./osTicket,dst=/build/osTicket,readonly=false \
 	--mount=type=bind,src=./.git/modules/osTicket,dst=/build/.git/modules/osTicket,readonly=false \
+	sed -i "s/'git describe'/'git describe --tags'/g" /build/osTicket/include/cli/modules/deploy.php && \
 	php manage.php deploy -v -s -g /build/deployment
 
 # Create osTicket container
