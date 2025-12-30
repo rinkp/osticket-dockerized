@@ -1,12 +1,13 @@
 services:
   osticket:
-    image: rinkp/osticket-dockerized:main
+    image: rinkp/osticket-dockerized:main-patches
     build:
       context: .
       dockerfile: Dockerfile-alpine
     depends_on:
       mariadb:
         condition: service_healthy
+        restart: true
     environment:
       - "OST_SECRET_SALT=" #<-- Fill in a random 256 bit key. Not provided in the example for safety
       - "OST_ADMIN_EMAIL=osticket@example.org"
@@ -16,6 +17,7 @@ services:
       - "OST_DBNAME=osticket"
       - "OST_DBUSER=osticket"
       - "OST_DBPASS=osticket"
+      - "OST_DBSSLCA=/var/lib/ssl/cert.pem"
       - "OST_TABLE_PREFIX=ost_"
       - "OST_TRUSTED_PROXIES=127.0.0.1"
       - "OST_LOCAL_NETWORKS=127.0.0.0/24"
@@ -26,6 +28,7 @@ services:
     restart: on-failure:2
     volumes:
       - attachments:/var/www/attachments:rw
+      - ssl_public:/var/lib/ssl:ro
     networks:
       osticket-network:
         aliases:
@@ -34,7 +37,12 @@ services:
       - 0.0.0.0:8080:80/tcp
       
   mariadb:
-    image: mariadb:lts
+    image: mariadb:11
+    command: '--ssl_cert=/var/lib/ssl/cert.pem --ssl_key=/var/lib/ssl/private/key.pem --ssl_ca=/var/lib/ssl/cert.pem --require_secure_transport=1'
+    depends_on:
+      openssl:
+        condition: service_completed_successfully
+        restart: true
     environment:
       - "MARIADB_RANDOM_ROOT_PASSWORD=yes"
       - "MARIADB_DATABASE=osticket"
@@ -44,6 +52,8 @@ services:
     restart: unless-stopped
     volumes:
       - mysql:/var/lib/mysql:rw
+      - ssl_public:/var/lib/ssl:ro
+      - ssl_private:/var/lib/ssl/private:ro
     healthcheck:
       test: "/usr/local/bin/healthcheck.sh --su mysql --connect --innodb_initialized"
       timeout: 10s
@@ -54,6 +64,14 @@ services:
           - mariadb
     expose:
       - 3306
+
+  openssl:
+    image: alpine/openssl
+    entrypoint: sh
+    command: '-c "[ -e /ssl/private/key.pem ] || openssl req -x509 -newkey rsa:4096 -keyout /ssl/private/key.pem -out /ssl/cert.pem -nodes -sha256 -days 3650 -nodes -subj \"/C=NL/O=osticket-test/CN=mariadb\" && chown -R 999 /ssl"'
+    volumes:
+      - ssl_public:/ssl:rw
+      - ssl_private:/ssl/private:rw
   
   #postfix:
   #  hostname: osticket-postfix
@@ -88,3 +106,5 @@ networks:
 volumes:
   attachments:
   mysql:
+  ssl_public:
+  ssl_private:

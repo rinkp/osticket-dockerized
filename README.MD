@@ -4,7 +4,8 @@ This is a Docker container containing [osTicket](https://github.com/osTicket/osT
 Available for linux/amd64 and linux/arm64 as `rinkp/osticket-dockerized` and `ghcr.io/rinkp/osticket-dockerized`
 
 An example [docker-compose.yml](https://raw.githubusercontent.com/rinkp/osticket-dockerized/main/docker-compose.yml) file is provided as well. This includes a local database instance, but you can also deploy the image with an external database server.<br/>
-When using the local database instance, note that the first start will take an extra 30 seconds since MariaDB has to start.
+When using the local database instance, note that the first start will take an extra 30 seconds since MariaDB has to start.<br/>
+In this example compose file, TLS is enabled for the MariaDB Server. **This only works in combination with a `-patches` image; without modifications, osTicket does not use SSL during setup.**. In the example, one-way verification is used (only the server has a key). To enable bidirectional support, also configure `OST_DBSSLCERT` and `OST_DBSSLKEY` and set this up in your database.
 
 Configuration happens through environment variables. These are listed below. Additionally, it is possible to store a `ost-config.php` file in `/config/ost-config.php` (e.g. file mount). 
 
@@ -52,3 +53,4 @@ Tags containing `-patches` are built from a fork of osTicket: https://github.com
   - Fix: Strict attachment checking is too strict (https://github.com/rinkp/osTicket/commit/a3e1825a5b748aebcc41e485d1292e5e72c18b13 and https://github.com/rinkp/osTicket/commit/eda5af40fcfd2bbaff110bfebd95b0a800bc63f6), fixed upstream in https://github.com/osTicket/osTicket/commit/b5b9e2b4a6cce480853b673ca700316d9e063efc
 - Current changes:
   - Allow certain forms to be visited when anonymous ticket creation is disabled (https://github.com/rinkp/osTicket/commit/2deed64e40a5a7738f0794ece9def6fa1c0fb20d) by specifying a topic ID: `/open.php?topicId=1`
+  - Enable SSL during setup (by @tomudding in https://github.com/tomudding/osTicket-rinkp/commit/80375569a30e5f4a4efb140b79479c9a6669ff63)

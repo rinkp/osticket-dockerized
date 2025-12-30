@@ -63,7 +63,7 @@ RUN --mount=type=cache,target=/etc/apk/cache,sharing=locked \
 	${PHP_VERSION}-pecl-imap \
 	${PHP_VERSION}-cli
 
-RUN ln -s ${PHP_VERSION} /usr/bin/php
+RUN ln -s -f ${PHP_VERSION} /usr/bin/php
 
 # Configure opcache. In development we may want to override PHP_OPCACHE_VALIDATE_TIMESTAMPS
 ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS="0" \ 
