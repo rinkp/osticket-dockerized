@@ -1,6 +1,6 @@
 ARG PHP_VERSION=php84
 
-FROM php:8.4-alpine AS build-plugins
+FROM php:8.4.27-alpine AS build-plugins
 ARG PHP_VERSION
 
 WORKDIR /osTicket-plugins
@@ -24,7 +24,7 @@ RUN --mount=type=bind,src=./osTicket-plugins,dst=/osTicket-plugins,readonly=fals
 	for f in $(ls *.phar); do cp $f /output; done
 
 # Build osTicket for release
-FROM php:8.4-alpine AS build-osticket
+FROM php:8.4.27-alpine AS build-osticket
 
 RUN --mount=type=cache,target=/etc/apk/cache,sharing=locked \
 	apk add --update git
@@ -44,21 +44,21 @@ ARG PHP_VERSION
 # We need PHP with several extensions
 RUN --mount=type=cache,target=/etc/apk/cache,sharing=locked \
 	apk add --update \
-	${PHP_VERSION}-apache2 \
-	${PHP_VERSION}-ctype \
-	${PHP_VERSION}-dom \
-	${PHP_VERSION}-gd \
-	${PHP_VERSION}-iconv \
-	${PHP_VERSION}-intl \
-	${PHP_VERSION}-fileinfo \
-	${PHP_VERSION}-xml \
-	${PHP_VERSION}-ldap \
-	${PHP_VERSION}-mbstring \
-	${PHP_VERSION}-phar \
-	${PHP_VERSION}-mysqli \
-	${PHP_VERSION}-opcache \
-	${PHP_VERSION}-session \
-	${PHP_VERSION}-zip \
+	${PHP_VERSION}-apache2~8.4.27 \
+	${PHP_VERSION}-ctype~8.4.27 \
+	${PHP_VERSION}-dom~8.4.27 \
+	${PHP_VERSION}-gd~8.4.27 \
+	${PHP_VERSION}-iconv~8.4.27 \
+	${PHP_VERSION}-intl~8.4.27 \
+	${PHP_VERSION}-fileinfo~8.4.27 \
+	${PHP_VERSION}-xml~8.4.27 \
+	${PHP_VERSION}-ldap~8.4.27 \
+	${PHP_VERSION}-mbstring~8.4.27 \
+	${PHP_VERSION}-phar~8.4.27 \
+	${PHP_VERSION}-mysqli~8.4.27 \
+	${PHP_VERSION}-opcache~8.4.27 \
+	${PHP_VERSION}-session~8.4.27 \
+	${PHP_VERSION}-zip~8.4.27 \
 	${PHP_VERSION}-pecl-apcu \
 	${PHP_VERSION}-pecl-imap \
 	${PHP_VERSION}-cli
