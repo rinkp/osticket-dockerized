@@ -7,6 +7,8 @@ RUN apt-get update && \
 	docker-php-ext-install zip
 
 RUN --mount=type=bind,src=./osTicket-plugins,dst=/osTicket-plugins,readonly=false \
+	sed -i "s#'psr/http-factory/src' => 'lib/Psr/Http/Factory'#'psr/http-factory/src' => 'lib/Psr/Http/Message'#" auth-oauth2/plugin.php && \
+	grep -q "'psr/http-factory/src' => 'lib/Psr/Http/Message'" auth-oauth2/plugin.php && \
 	COMPOSER_ALLOW_SUPERUSER=1 php ./make.php hydrate && \
 	php -dphar.readonly=0 make.php build audit && \
     php -dphar.readonly=0 make.php build auth-2fa && \
