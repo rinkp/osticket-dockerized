@@ -34,6 +34,8 @@ jobs:
         env:
           BRANCH: ${{ github.ref_type == 'branch' && 'origin/develop' || github.ref_name}}${{ matrix.patches }}
         run: |
+          # Tags like v1.18.4-dockerized0 map to osTicket tag v1.18.4
+          BRANCH=$(sed -E 's/-dockerized[0-9]*//' <<< "$BRANCH")
           cd osTicket/
           git remote
           git fetch origin -t
@@ -130,7 +132,7 @@ jobs:
           tags: |
             type=ref,event=branch,suffix=${{ matrix.patches }}
             type=ref,event=pr,suffix=${{ matrix.patches }}
-            type=semver,pattern={{version}}${{ matrix.patches }}
+            type=raw,value=${{ github.ref_name }},suffix=${{ matrix.patches }}
 
       - name: Create manifest list and push
         run: |
