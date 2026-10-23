@@ -1,46 +1,7 @@
 ARG PHP_VERSION=php84
 
-FROM php:8.4.27-alpine AS build-plugins
-ARG PHP_VERSION
-
-WORKDIR /osTicket-plugins
-
-RUN --mount=type=cache,target=/etc/apk/cache,sharing=locked \
-	apk add --update \
-	${PHP_VERSION}-curl \
-	${PHP_VERSION}-pecl-psr
-
-RUN --mount=type=bind,src=./osTicket-plugins,dst=/osTicket-plugins,readonly=false \
-	sed -i "s#'psr/http-factory/src' => 'lib/Psr/Http/Factory'#'psr/http-factory/src' => 'lib/Psr/Http/Message'#" auth-oauth2/plugin.php && \
-	grep -q "'psr/http-factory/src' => 'lib/Psr/Http/Message'" auth-oauth2/plugin.php && \
-	COMPOSER_ALLOW_SUPERUSER=1 php ./make.php hydrate \
-	php -dphar.readonly=0 make.php build audit && \
-    php -dphar.readonly=0 make.php build auth-2fa && \
-    php -dphar.readonly=0 make.php build auth-ldap && \
-    php -dphar.readonly=0 make.php build auth-oauth2 && \
-    php -dphar.readonly=0 make.php build auth-passthru && \
-    php -dphar.readonly=0 make.php build auth-password-policy  && \
-    php -dphar.readonly=0 make.php build storage-fs  && \
-    php -dphar.readonly=0 make.php build storage-s3 && \
-	mkdir /output && \
-	for f in $(ls *.phar); do cp $f /output; done
-
-# Build osTicket for release
-FROM php:8.4.27-alpine AS build-osticket
-
-RUN --mount=type=cache,target=/etc/apk/cache,sharing=locked \
-	apk add --update git
-
-# Import osTicket git
-WORKDIR /build/osTicket
-
-RUN --mount=type=bind,src=./osTicket,dst=/build/osTicket,readonly=false \
-	--mount=type=bind,src=./.git/modules/osTicket,dst=/build/.git/modules/osTicket,readonly=false \
-	sed -i "s/'git describe'/'git describe --tags'/g" /build/osTicket/include/cli/modules/deploy.php && \
-	php manage.php deploy -v -s -g /build/deployment
-
-# Create osTicket container
-FROM alpine:latest AS run
+# Create base PHP container (to be used in various steps)
+FROM alpine:latest AS base
 ARG PHP_VERSION
 
 # We need PHP with several extensions
@@ -63,9 +24,53 @@ RUN --mount=type=cache,target=/etc/apk/cache,sharing=locked \
 	${PHP_VERSION}-zip~8.4.27 \
 	${PHP_VERSION}-pecl-apcu \
 	${PHP_VERSION}-pecl-imap \
+	${PHP_VERSION}-pecl-psr \
 	${PHP_VERSION}-cli
 
 RUN ln -s -f ${PHP_VERSION} /usr/bin/php
+
+# Build the plugins
+FROM base AS build-plugins
+ARG PHP_VERSION
+
+WORKDIR /osTicket-plugins
+
+RUN --mount=type=cache,target=/etc/apk/cache,sharing=locked \
+	apk add --update \
+	${PHP_VERSION}-curl \
+	${PHP_VERSION}-openssl \
+	${PHP_VERSION}-simplexml
+
+RUN --mount=type=bind,src=./osTicket-plugins,dst=/osTicket-plugins,readonly=false \
+	COMPOSER_ALLOW_SUPERUSER=1 php ./make.php hydrate \
+	php -dphar.readonly=0 make.php build audit && \
+    php -dphar.readonly=0 make.php build auth-2fa && \
+    php -dphar.readonly=0 make.php build auth-ldap && \
+    php -dphar.readonly=0 make.php build auth-oauth2 && \
+    php -dphar.readonly=0 make.php build auth-passthru && \
+    php -dphar.readonly=0 make.php build auth-password-policy  && \
+    php -dphar.readonly=0 make.php build storage-fs  && \
+    php -dphar.readonly=0 make.php build storage-s3 && \
+	mkdir /output && \
+	for f in $(ls *.phar); do cp $f /output; done
+
+# Build osTicket for release
+FROM base AS build-osticket
+
+RUN --mount=type=cache,target=/etc/apk/cache,sharing=locked \
+	apk add --update git
+
+# Import osTicket git
+WORKDIR /build/osTicket
+
+RUN --mount=type=bind,src=./osTicket,dst=/build/osTicket,readonly=false \
+	--mount=type=bind,src=./.git/modules/osTicket,dst=/build/.git/modules/osTicket,readonly=false \
+	sed -i "s/'git describe'/'git describe --tags'/g" /build/osTicket/include/cli/modules/deploy.php && \
+	php manage.php deploy -v -s -g /build/deployment
+
+# Create osTicket container
+FROM base AS run
+ARG PHP_VERSION
 
 # Configure opcache. In development we may want to override PHP_OPCACHE_VALIDATE_TIMESTAMPS
 ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS="0" \ 
