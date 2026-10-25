@@ -1,0 +1,22 @@
+oauth2:
+  enabled: true                      # Enable OAuth2/OIDC authorization code flow
+  require_challenge_on_login: false  # Show challenge field on login page
+users:
+  - id: "1"
+    username: "user1"
+    password: "password1"
+    # User attributes are arbitrary
+    attributes:
+      role_name: "admin"
+      email: "osticket@example.org"
+  - id: "2"
+    username: "user2"
+    password: "password2"
+    attributes:
+      role_name: "user"
+      email: "user2@example.org"
+clients:
+  - id: "client1"
+    audience: "localhost"
+    secret: "super_secret"
+    redirect_uri: "http://localhost:8080/api/auth/oauth2"

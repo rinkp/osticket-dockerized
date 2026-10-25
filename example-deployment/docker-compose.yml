@@ -1,0 +1,23 @@
+name: osticket-example-deployment
+include:
+  - ../docker-compose.yml
+services:
+  local-idp:
+    image: siocode/local-idp
+    ports:
+      - 0.0.0.0:8081:8081/tcp
+    volumes:
+      - ./local-idp.config.yaml:/config.yaml:ro
+    environment:
+      - PORT=8081
+    networks:
+      osticket-network:
+        aliases:
+          - idp
+  osticket:
+    depends_on:
+      local-idp:
+        condition: service_started
+        restart: true
+    environment:
+      - "OST_SECRET_SALT=asdfasdf"
