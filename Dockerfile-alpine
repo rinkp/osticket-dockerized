@@ -24,7 +24,6 @@ RUN --mount=type=cache,target=/etc/apk/cache,sharing=locked \
 	${PHP_VERSION}-zip~8.4.27 \
 	${PHP_VERSION}-pecl-apcu \
 	${PHP_VERSION}-pecl-imap \
-	${PHP_VERSION}-pecl-psr \
 	${PHP_VERSION}-cli
 
 RUN ln -s -f ${PHP_VERSION} /usr/bin/php

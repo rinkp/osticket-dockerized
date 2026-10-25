@@ -47,6 +47,8 @@ This repository contains 2 submodules, pull them using `git submodule update --i
 ## Noteworthy changes
 Tags containing `-patches` are built from a fork of osTicket: https://github.com/rinkp/osticket-dockerized. Updates are rebased from the original to allow for easy comparisons. See the changes for 1.18.4 [here](https://github.com/osTicket/osTicket/compare/v1.18.4...rinkp:osTicket:v1.18.4-patches)
 
+For `osTicket-plugins`, the [patch](https://github.com/osticket/osticket-plugins/commit/3768801b06b7fb8ee9a5c779040ba28521e4f6b9) by @allen-ball is used pending [a pull request](https://github.com/osTicket/osTicket-plugins/pull/307) into the upstream repository.
+
 - Changes applied in the past:
   - Fix: Allowing multiple plugins with their own configuration (https://github.com/rinkp/osTicket/commit/3db0397135f799d33882596972e980cb46c90ac8), patched upstream in https://github.com/osTicket/osTicket/commit/3e96e5fdd649fcacc3a6cc2b177af47724fcd298
   - Fix: Session data (https://github.com/rinkp/osTicket/commit/cf8b8ce721223281bc98db54dc2271f6cfb6d6cd), included upstream in https://github.com/osTicket/osTicket/pull/6360
